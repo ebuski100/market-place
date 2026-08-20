@@ -1,11 +1,14 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+
 import { useRouter } from "next/navigation";
 import { mergeGuestCart } from "@/lib/guestCart";
-export default function LoginPage() {
+
+export default function RegisterPage() {
   const router = useRouter();
 
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -19,12 +22,13 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const response = await fetch("/api/auth/login", {
+      const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          name,
           email,
           password,
         }),
@@ -33,7 +37,7 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || "Failed to login");
+        setError(data.error || "Failed to register");
         return;
       }
 
@@ -56,9 +60,25 @@ export default function LoginPage() {
   return (
     <main className="flex min-h-screen items-center justify-center p-6">
       <div className="w-full max-w-md rounded-xl border p-8 shadow-sm">
-        <h1 className="mb-6 text-3xl font-bold">Login</h1>
+        <h1 className="mb-6 text-3xl font-bold">Create Account</h1>
 
         <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label htmlFor="name" className="mb-2 block font-medium">
+              Name
+            </label>
+
+            <input
+              id="name"
+              type="text"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              required
+              className="w-full rounded-md border p-3 outline-none"
+              placeholder="Your name"
+            />
+          </div>
+
           <div>
             <label htmlFor="email" className="mb-2 block font-medium">
               Email
@@ -70,7 +90,7 @@ export default function LoginPage() {
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               required
-              className="w-full rounded-md border p-3 outline-none focus:ring-2"
+              className="w-full rounded-md border p-3 outline-none"
               placeholder="you@example.com"
             />
           </div>
@@ -86,7 +106,8 @@ export default function LoginPage() {
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               required
-              className="w-full rounded-md border p-3 outline-none focus:ring-2"
+              minLength={6}
+              className="w-full rounded-md border p-3 outline-none"
               placeholder="••••••••"
             />
           </div>
@@ -98,7 +119,7 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full rounded-md bg-black py-3 text-white disabled:opacity-50"
           >
-            {loading ? "Logging in..." : "Login"}
+            {loading ? "Creating account..." : "Create Account"}
           </button>
         </form>
       </div>

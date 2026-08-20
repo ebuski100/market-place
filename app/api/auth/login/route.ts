@@ -2,31 +2,35 @@ import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { randomBytes } from "crypto";
 import { cookies } from "next/headers";
+import { loginSchema } from "@/lib/validations/auth";
 
 export async function POST(request: Request) {
   try {
+    // Get request body
     const body = await request.json();
 
-    const { email, password } = body;
+    // Validate and normalize input with Zod
+    const result = loginSchema.safeParse(body);
 
-    if (!email || !password) {
+    if (!result.success) {
       return Response.json(
         {
-          error: "Email and password are required",
+          error: result.error.issues[0].message,
         },
         { status: 400 },
       );
     }
 
-    const normalizedEmail = email.toLowerCase().trim();
+    const { email, password } = result.data;
 
     // Find the user
     const user = await prisma.user.findUnique({
       where: {
-        email: normalizedEmail,
+        email,
       },
     });
 
+    // Don't reveal whether the email exists
     if (!user) {
       return Response.json(
         {
@@ -36,7 +40,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Compare the submitted password with the hashed password
+    // Compare submitted password with hashed password
     const passwordMatches = await bcrypt.compare(password, user.password);
 
     if (!passwordMatches) {
@@ -54,6 +58,7 @@ export async function POST(request: Request) {
     // Session expires in 7 days
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
+    // Save session in database
     await prisma.session.create({
       data: {
         id: sessionId,

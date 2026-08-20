@@ -1,39 +1,37 @@
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { randomBytes } from "crypto";
+import { cookies } from "next/headers";
+import { registerSchema } from "@/lib/validations/auth";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    const { name, email, password } = body;
+    // ---------------------------------------
+    // Validate and normalize input with Zod
+    // ---------------------------------------
 
-    // Validate required fields
-    if (!name || !email || !password) {
+    const result = registerSchema.safeParse(body);
+
+    if (!result.success) {
       return Response.json(
         {
-          error: "Name, email and password are required",
+          error: result.error.issues[0].message,
         },
         { status: 400 },
       );
     }
 
-    // Basic password validation
-    if (password.length < 6) {
-      return Response.json(
-        {
-          error: "Password must be at least 6 characters",
-        },
-        { status: 400 },
-      );
-    }
+    const { name, email, password } = result.data;
 
-    // Normalize email
-    const normalizedEmail = email.toLowerCase().trim();
-
+    // ---------------------------------------
     // Check if user already exists
+    // ---------------------------------------
+
     const existingUser = await prisma.user.findUnique({
       where: {
-        email: normalizedEmail,
+        email,
       },
     });
 
@@ -46,14 +44,20 @@ export async function POST(request: Request) {
       );
     }
 
+    // ---------------------------------------
     // Hash password
+    // ---------------------------------------
+
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Create user and cart together
+    // ---------------------------------------
+    // Create user + cart
+    // ---------------------------------------
+
     const user = await prisma.user.create({
       data: {
-        name: name.trim(),
-        email: normalizedEmail,
+        name,
+        email,
         password: hashedPassword,
 
         cart: {
@@ -61,7 +65,7 @@ export async function POST(request: Request) {
         },
       },
 
-      // Don't return password to the client
+      // Never return the password
       select: {
         id: true,
         name: true,
@@ -69,6 +73,41 @@ export async function POST(request: Request) {
         createdAt: true,
       },
     });
+
+    // ---------------------------------------
+    // Create session
+    // ---------------------------------------
+
+    const sessionId = randomBytes(32).toString("hex");
+
+    // Session expires in 7 days
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+    await prisma.session.create({
+      data: {
+        id: sessionId,
+        userId: user.id,
+        expiresAt,
+      },
+    });
+
+    // ---------------------------------------
+    // Store session ID in HttpOnly cookie
+    // ---------------------------------------
+
+    const cookieStore = await cookies();
+
+    cookieStore.set("sessionId", sessionId, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      expires: expiresAt,
+      path: "/",
+    });
+
+    // ---------------------------------------
+    // Return successful response
+    // ---------------------------------------
 
     return Response.json(
       {

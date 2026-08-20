@@ -47,7 +47,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             {product.stock > 0 ? `${product.stock} available` : "Out of stock"}
           </p>
 
-          <AddToCartButton productId={product.id} stock={product.stock} />
+          <AddToCartButton product={product} />
         </div>
       </div>
     </main>

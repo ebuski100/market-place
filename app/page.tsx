@@ -1,6 +1,8 @@
 import type { Product } from "@/types/product";
 import ProductCard from "@/components/ProductCard";
 import Footer from "@/components/Footer";
+import Header from "@/components/Header";
+
 export default async function HomePage() {
   const response = await fetch("http://localhost:3000/api/products", {
     cache: "no-store",
@@ -14,7 +16,7 @@ export default async function HomePage() {
 
   return (
     <main className="p-8 pb-30">
-      <h1 className="text-3xl font-bold mb-6">Products</h1>
+      <Header />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 ">
         {products.map((product) => (
