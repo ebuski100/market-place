@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
 
 type RouteParams = {
   params: Promise<{
@@ -8,16 +9,21 @@ type RouteParams = {
 
 export async function PATCH(request: Request, { params }: RouteParams) {
   try {
-    const { itemId } = await params;
+    const user = await getCurrentUser();
 
+    if (!user) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { itemId } = await params;
     const id = Number(itemId);
 
-    if (!Number.isInteger(id)) {
+    if (Number.isNaN(id)) {
       return Response.json({ error: "Invalid cart item ID" }, { status: 400 });
     }
 
     const body = await request.json();
-    const quantity = Number(body.quantity);
+    const { quantity } = body;
 
     if (!Number.isInteger(quantity) || quantity < 1) {
       return Response.json(
@@ -26,12 +32,12 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       );
     }
 
-    const cartItem = await prisma.cartItem.findUnique({
+    const cartItem = await prisma.cartItem.findFirst({
       where: {
         id,
-      },
-      include: {
-        product: true,
+        cart: {
+          userId: user.id,
+        },
       },
     });
 
@@ -39,16 +45,9 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       return Response.json({ error: "Cart item not found" }, { status: 404 });
     }
 
-    if (quantity > cartItem.product.stock) {
-      return Response.json(
-        { error: "Not enough stock available" },
-        { status: 400 },
-      );
-    }
-
     const updatedItem = await prisma.cartItem.update({
       where: {
-        id,
+        id: cartItem.id,
       },
       data: {
         quantity,
@@ -60,7 +59,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
 
     return Response.json(updatedItem);
   } catch (error) {
-    console.error("Error updating cart item:", error);
+    console.error("Failed to update cart item:", error);
 
     return Response.json(
       { error: "Failed to update cart item" },
@@ -69,19 +68,31 @@ export async function PATCH(request: Request, { params }: RouteParams) {
   }
 }
 
-export async function DELETE(request: Request, { params }: RouteParams) {
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ itemId: string }> },
+) {
   try {
-    const { itemId } = await params;
+    const user = await getCurrentUser();
 
+    if (!user) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { itemId } = await params;
     const id = Number(itemId);
 
-    if (!Number.isInteger(id)) {
+    if (Number.isNaN(id)) {
       return Response.json({ error: "Invalid cart item ID" }, { status: 400 });
     }
 
-    const cartItem = await prisma.cartItem.findUnique({
+    // Make sure the item belongs to the logged-in user's cart
+    const cartItem = await prisma.cartItem.findFirst({
       where: {
         id,
+        cart: {
+          userId: user.id,
+        },
       },
     });
 
@@ -91,15 +102,15 @@ export async function DELETE(request: Request, { params }: RouteParams) {
 
     await prisma.cartItem.delete({
       where: {
-        id,
+        id: cartItem.id,
       },
     });
 
     return Response.json({
-      message: "Cart item removed",
+      message: "Item removed from cart",
     });
   } catch (error) {
-    console.error("Error removing cart item:", error);
+    console.error("Failed to remove cart item:", error);
 
     return Response.json(
       { error: "Failed to remove cart item" },
