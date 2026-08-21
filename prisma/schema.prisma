@@ -62,6 +62,7 @@ model User {
   cart     Cart?
   sessions Session[]
   orders Order[]
+  addresses Address[]
 }
 
 model Session {
@@ -85,6 +86,7 @@ model Order {
   subtotal        Float
   deliveryFee     Float
   total           Float
+  deliveryMethod  String @default("free")
 
   fullName        String
   phone           String
@@ -92,6 +94,12 @@ model Order {
   city            String
   state           String
   country         String
+
+
+  // Payment information
+  payStackReference String?      @unique
+  paidAt           DateTime?
+  
 
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
@@ -115,8 +123,10 @@ model OrderItem {
 
 enum OrderStatus {
   PENDING
+  CONFIRMED
   PROCESSING
   SHIPPED
+  OUT_FOR_DELIVERY
   DELIVERED
   CANCELLED
 }
@@ -126,4 +136,25 @@ enum PaymentStatus {
   PAID
   FAILED
   REFUNDED
+}
+
+
+model Address {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+
+  label      String   // "Home", "Office", etc.
+  fullName   String
+  phone      String
+  address    String
+  city       String
+  state      String
+  country    String
+
+  isDefault  Boolean  @default(false)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

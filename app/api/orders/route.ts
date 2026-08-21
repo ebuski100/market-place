@@ -76,13 +76,6 @@ export async function POST(request: Request) {
 
     // 5. Create order and update stock in ONE transaction
     const order = await prisma.$transaction(async (tx) => {
-      // Verify stock before creating the order
-      for (const item of cart.items) {
-        if (item.quantity > item.product.stock) {
-          throw new Error(`${item.product.name} does not have enough stock`);
-        }
-      }
-
       // Create order
       const newOrder = await tx.order.create({
         data: {
@@ -94,6 +87,7 @@ export async function POST(request: Request) {
           subtotal,
           deliveryFee,
           total,
+          deliveryMethod,
 
           fullName,
           phone,
@@ -114,27 +108,6 @@ export async function POST(request: Request) {
 
         include: {
           items: true,
-        },
-      });
-
-      // Reduce stock
-      for (const item of cart.items) {
-        await tx.product.update({
-          where: {
-            id: item.product.id,
-          },
-          data: {
-            stock: {
-              decrement: item.quantity,
-            },
-          },
-        });
-      }
-
-      // Clear cart
-      await tx.cartItem.deleteMany({
-        where: {
-          cartId: cart.id,
         },
       });
 
