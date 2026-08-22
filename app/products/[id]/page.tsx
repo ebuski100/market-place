@@ -11,9 +11,12 @@ type ProductPageProps = {
 export default async function ProductPage({ params }: ProductPageProps) {
   const { id } = await params;
 
-  const response = await fetch(`http://localhost:3000/api/products/${id}`, {
-    cache: "no-store",
-  });
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_APP_URL}/api/products/${id}`,
+    {
+      cache: "no-store",
+    },
+  );
 
   if (!response.ok) {
     notFound();
