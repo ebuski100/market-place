@@ -75,7 +75,7 @@ export default async function OrdersPage() {
                       ₦{order.total.toLocaleString()}
                     </p>
 
-                    <div className="mt-2 flex gap-2 sm:justify-end">
+                    {/* <div className="mt-2 flex gap-2 sm:justify-end">
                       <span
                         className={`rounded-full px-3 py-1 text-xs font-medium ${
                           order.paymentStatus === "PAID"
@@ -89,7 +89,7 @@ export default async function OrdersPage() {
                       <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700">
                         {order.status}
                       </span>
-                    </div>
+                    </div> */}
                   </div>
                 </div>
 

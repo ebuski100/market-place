@@ -2,6 +2,7 @@ import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(request: Request) {
+  console.log("🔥 PAYSTACK WEBHOOK HIT");
   try {
     // --------------------------------------------------
     // 1. Get Paystack secret key

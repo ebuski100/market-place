@@ -99,7 +99,7 @@ model Order {
   // Payment information
   payStackReference String?      @unique
   paidAt           DateTime?
-  
+   estimatedDeliveryAt DateTime?
 
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt

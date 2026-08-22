@@ -77,6 +77,11 @@ export async function POST(request: Request) {
     // 5. Create order and update stock in ONE transaction
     const order = await prisma.$transaction(async (tx) => {
       // Create order
+      const estimatedDeliveryAt = new Date();
+
+      estimatedDeliveryAt.setDate(
+        estimatedDeliveryAt.getDate() + selectedDelivery.maxDays,
+      );
       const newOrder = await tx.order.create({
         data: {
           userId: user.id,
@@ -88,7 +93,7 @@ export async function POST(request: Request) {
           deliveryFee,
           total,
           deliveryMethod,
-
+          estimatedDeliveryAt,
           fullName,
           phone,
           address,
