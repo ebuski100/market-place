@@ -36,12 +36,5 @@ export default async function PaymentCallbackPage({
     redirect("/orders");
   }
 
-  /*
-   * The webhook is responsible for final payment confirmation.
-   *
-   * We check the current order state here and then take
-   * the customer to their order.
-   */
-
   redirect(`/orders/${order.id}`);
 }
