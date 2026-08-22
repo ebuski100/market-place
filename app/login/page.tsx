@@ -31,7 +31,7 @@ export default function LoginPage() {
       });
 
       const data = await response.json();
-
+      console.log("hello world");
       if (!response.ok) {
         setError(data.error || "Failed to login");
         return;

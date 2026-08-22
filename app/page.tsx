@@ -4,9 +4,12 @@ import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 
 export default async function HomePage() {
-  const response = await fetch("http://localhost:3000/api/products", {
-    cache: "no-store",
-  });
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_APP_URL}/api/products`,
+    {
+      cache: "no-store",
+    },
+  );
 
   if (!response.ok) {
     throw new Error("Failed to fetch products");
