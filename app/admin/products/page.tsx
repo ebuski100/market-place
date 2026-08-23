@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin";
-
+import ProductStatusButton from "./ProductStatusButton";
 export default async function AdminProductsPage() {
   await requireAdmin();
 
@@ -44,7 +44,7 @@ export default async function AdminProductsPage() {
         <div className="overflow-hidden rounded-lg border bg-white">
           <div className="overflow-x-auto">
             <table className="w-full text-left">
-              <thead className="border-b bg-gray-50">
+              <thead className="border-b bg-gray-50 ">
                 <tr>
                   <th className="px-6 py-4 text-sm font-semibold">Product</th>
 
@@ -55,6 +55,7 @@ export default async function AdminProductsPage() {
                   <th className="px-6 py-4 text-sm font-semibold">Stock</th>
 
                   <th className="px-6 py-4 text-sm font-semibold">Created</th>
+                  <th className="px-6 py-4 text-sm font-semibold">Status</th>
 
                   <th className="px-6 py-4" />
                 </tr>
@@ -65,14 +66,21 @@ export default async function AdminProductsPage() {
                   <tr key={product.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-4">
-                        <img
-                          src={product.image}
-                          alt={product.name}
-                          className="h-14 w-14 rounded-md object-cover"
-                        />
+                        <Link href={`/admin/products/${product.id}`}>
+                          <img
+                            src={product.image}
+                            alt={product.name}
+                            className="h-14 w-14 rounded-md object-cover"
+                          />
+                        </Link>
 
                         <div>
-                          <p className="font-semibold">{product.name}</p>
+                          <Link
+                            href={`/admin/products/${product.id}`}
+                            className="font-medium hover:underline"
+                          >
+                            <p className="font-semibold">{product.name}</p>
+                          </Link>
 
                           <p className="mt-1 max-w-xs truncate text-sm text-gray-500">
                             {product.description}
@@ -102,14 +110,16 @@ export default async function AdminProductsPage() {
                         day: "numeric",
                       })}
                     </td>
-
                     <td className="px-6 py-4">
-                      <Link
-                        href={`/admin/products/${product.id}/edit`}
-                        className="font-medium hover:underline"
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-medium ${
+                          product.isActive
+                            ? "bg-green-100 text-green-700"
+                            : "bg-gray-100 text-gray-600"
+                        }`}
                       >
-                        Edit →
-                      </Link>
+                        {product.isActive ? "Active" : "Inactive"}
+                      </span>
                     </td>
                   </tr>
                 ))}

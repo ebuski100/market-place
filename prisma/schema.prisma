@@ -26,6 +26,8 @@ model Product {
 
   cartItems CartItem[]
   orderItems  OrderItem[]
+  inventoryTransactions InventoryTransaction[]
+
 }
 
 model Cart {
@@ -163,4 +165,28 @@ model Address {
   updatedAt  DateTime @updatedAt
 
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model InventoryTransaction {
+  id        Int      @id @default(autoincrement())
+
+  productId Int
+  quantity  Int
+
+  type      InventoryTransactionType
+  reason    String?
+
+  createdAt DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@index([createdAt])
+}
+enum InventoryTransactionType {
+  RESTOCK
+  ADJUSTMENT
+  DAMAGED
+  RETURN
+  ORDER
 }

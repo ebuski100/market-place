@@ -2,7 +2,14 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   try {
-    const products = await prisma.product.findMany();
+    const products = await prisma.product.findMany({
+      where: {
+        isActive: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
 
     return Response.json(products);
   } catch (error) {
