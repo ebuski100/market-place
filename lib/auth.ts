@@ -37,3 +37,17 @@ export async function getCurrentUser() {
 
   return session.user;
 }
+
+export async function requireAdmin() {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    return null;
+  }
+
+  if (user.role !== "ADMIN") {
+    return null;
+  }
+
+  return user;
+}
