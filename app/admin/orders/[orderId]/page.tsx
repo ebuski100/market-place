@@ -17,10 +17,6 @@ export default async function OrderPage({ params }: OrderPageProps) {
     redirect("/login?redirect=/orders");
   }
 
-  // --------------------------------------------------
-  // 2. Get order ID from URL
-  // --------------------------------------------------
-
   const { orderId } = await params;
 
   const id = Number(orderId);
@@ -29,25 +25,6 @@ export default async function OrderPage({ params }: OrderPageProps) {
     notFound();
   }
 
-  // --------------------------------------------------
-  // 3. Get order
-  // --------------------------------------------------
-  //
-  // IMPORTANT:
-  //
-  // We check BOTH:
-  //
-  // id
-  // userId
-  //
-  // This prevents a customer from viewing
-  // another customer's order.
-  // --------------------------------------------------
-  console.log("ORDER DEBUG:", {
-    orderId,
-    id,
-    userId: user.id,
-  });
   const order = await prisma.order.findFirst({
     where: {
       id,
@@ -62,24 +39,12 @@ export default async function OrderPage({ params }: OrderPageProps) {
     },
   });
 
-  console.log("ORDER FOUND:", order);
-
   if (!order) {
     notFound();
   }
 
-  // --------------------------------------------------
-  // 4. Calculate current status
-  // --------------------------------------------------
-  const currentStatus = order.status;
-
-  // --------------------------------------------------
-  // 5. Render
-  // --------------------------------------------------
-
   return (
     <main className="mx-auto min-h-screen w-full max-w-5xl p-8">
-      {/* Back */}
       <Link
         href="/orders"
         className="mb-6 inline-block text-sm text-gray-500 hover:text-black"
@@ -87,63 +52,25 @@ export default async function OrderPage({ params }: OrderPageProps) {
         ← Back to orders
       </Link>
 
-      {/* Header */}
-      <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row">
-        <div>
-          <h1 className="text-3xl font-bold">Order #{order.id}</h1>
+      <h1 className="text-3xl font-bold">Order #{order.id}</h1>
 
-          <p className="mt-2 text-sm text-gray-500">
-            Placed{" "}
-            {order.createdAt.toLocaleDateString("en-NG", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
-          </p>
-        </div>
+      <p className="mt-2 text-sm text-gray-500">
+        Placed{" "}
+        {order.createdAt.toLocaleDateString("en-NG", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        })}
+      </p>
 
-        {/* Status badges */}
-        <div className="flex flex-wrap gap-2">
-          <span
-            className={`rounded-full px-3 py-1 text-sm font-medium ${
-              order.paymentStatus === "PAID"
-                ? "bg-green-100 text-green-700"
-                : "bg-yellow-100 text-yellow-700"
-            }`}
-          >
-            Payment: {order.paymentStatus}
-          </span>
-
-          <span className="rounded-full bg-gray-100 px-3 py-1 text-sm font-medium">
-            {formatStatus(currentStatus)}
-          </span>
-        </div>
-      </div>
-
-      <div className="grid gap-8 md:grid-cols-3">
-        {/* Main content */}
+      <div className="mt-8 grid gap-8 md:grid-cols-3">
         <section className="space-y-8 md:col-span-2">
-          {/* Order Status */}
           <div className="rounded-lg border p-6">
             <h2 className="mb-6 text-xl font-semibold">Order Status</h2>
 
-            <OrderTimeline status={currentStatus} />
-
-            {order.paymentStatus === "PAID" && order.paidAt && (
-              <div className="mt-6 rounded-md bg-gray-50 p-4">
-                <p className="text-sm text-gray-500">Payment confirmed</p>
-
-                <p className="mt-1 font-medium">
-                  {order.paidAt.toLocaleString("en-NG", {
-                    dateStyle: "medium",
-                    timeStyle: "short",
-                  })}
-                </p>
-              </div>
-            )}
+            <OrderTimeline status={order.status} />
           </div>
 
-          {/* Items */}
           <div className="rounded-lg border p-6">
             <h2 className="mb-6 text-xl font-semibold">Items</h2>
 
@@ -169,32 +96,27 @@ export default async function OrderPage({ params }: OrderPageProps) {
             </div>
           </div>
 
-          {/* Delivery Information */}
           <div className="rounded-lg border p-6">
             <h2 className="mb-6 text-xl font-semibold">Delivery Information</h2>
 
             <div className="space-y-4">
               <div>
                 <p className="text-sm text-gray-500">Recipient</p>
-
                 <p className="font-medium">{order.fullName}</p>
               </div>
 
               <div>
                 <p className="text-sm text-gray-500">Phone</p>
-
                 <p className="font-medium">{order.phone}</p>
               </div>
 
               <div>
                 <p className="text-sm text-gray-500">Address</p>
-
                 <p className="font-medium">{order.address}</p>
               </div>
 
               <div>
                 <p className="text-sm text-gray-500">Location</p>
-
                 <p className="font-medium">
                   {order.city}, {order.state}, {order.country}
                 </p>
@@ -202,21 +124,18 @@ export default async function OrderPage({ params }: OrderPageProps) {
 
               <div>
                 <p className="text-sm text-gray-500">Delivery method</p>
-
                 <p className="font-medium capitalize">{order.deliveryMethod}</p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Summary */}
         <aside className="h-fit rounded-lg border p-6">
           <h2 className="mb-6 text-xl font-semibold">Order Summary</h2>
 
           <div className="space-y-4">
             <div className="flex justify-between">
               <span className="text-gray-600">Subtotal</span>
-
               <span>₦{order.subtotal.toLocaleString()}</span>
             </div>
 
@@ -237,26 +156,10 @@ export default async function OrderPage({ params }: OrderPageProps) {
             </div>
           </div>
 
-          {/* Payment */}
           <div className="mt-6 border-t pt-6">
             <p className="text-sm text-gray-500">Payment status</p>
 
-            <p
-              className={`mt-1 font-semibold ${
-                order.paymentStatus === "PAID"
-                  ? "text-green-600"
-                  : "text-yellow-600"
-              }`}
-            >
-              {order.paymentStatus}
-            </p>
-          </div>
-
-          {/* Current order status */}
-          <div className="mt-6 border-t pt-6">
-            <p className="text-sm text-gray-500">Current order status</p>
-
-            <p className="mt-1 font-semibold">{formatStatus(currentStatus)}</p>
+            <p className="mt-1 font-semibold">{order.paymentStatus}</p>
           </div>
         </aside>
       </div>
@@ -264,41 +167,6 @@ export default async function OrderPage({ params }: OrderPageProps) {
   );
 }
 
-/**
- * Convert database-style status names into
- * human-readable text.
- */
-function formatStatus(status: string) {
-  switch (status) {
-    case "PENDING":
-      return "Order placed";
-
-    case "CONFIRMED":
-      return "Order confirmed";
-
-    case "PROCESSING":
-      return "Processing";
-
-    case "SHIPPED":
-      return "Shipped";
-
-    case "OUT_FOR_DELIVERY":
-      return "Out for delivery";
-
-    case "DELIVERED":
-      return "Delivered";
-
-    case "CANCELLED":
-      return "Cancelled";
-
-    default:
-      return status;
-  }
-}
-
-/**
- * Order status timeline
- */
 function OrderTimeline({ status }: { status: string }) {
   const steps = [
     {
@@ -332,13 +200,11 @@ function OrderTimeline({ status }: { status: string }) {
   return (
     <div className="space-y-5">
       {steps.map((step, index) => {
-        const completed = currentIndex >= index && currentIndex !== -1;
-
+        const completed = currentIndex >= index;
         const current = step.id === status;
 
         return (
           <div key={step.id} className="flex items-start gap-4">
-            {/* Circle + connecting line */}
             <div className="flex flex-col items-center">
               <div
                 className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${
@@ -359,7 +225,6 @@ function OrderTimeline({ status }: { status: string }) {
               )}
             </div>
 
-            {/* Status text */}
             <div>
               <p
                 className={`font-medium ${
