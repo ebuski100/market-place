@@ -112,3 +112,61 @@ export async function POST(request: Request, { params }: RouteContext) {
     );
   }
 }
+
+export async function GET(request: Request, { params }: RouteContext) {
+  try {
+    await requireAdmin();
+
+    const { productId } = await params;
+
+    const id = Number(productId);
+
+    if (!Number.isInteger(id)) {
+      return NextResponse.json(
+        { error: "Invalid product ID" },
+        { status: 400 },
+      );
+    }
+
+    const product = await prisma.product.findUnique({
+      where: {
+        id,
+      },
+      select: {
+        id: true,
+        name: true,
+        stock: true,
+      },
+    });
+
+    if (!product) {
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    }
+
+    const transactions = await prisma.inventoryTransaction.findMany({
+      where: {
+        productId: id,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return NextResponse.json({
+      product,
+      transactions,
+    });
+  } catch (error) {
+    console.error("Inventory history error:", error);
+
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to fetch inventory history",
+      },
+      { status: 500 },
+    );
+  }
+}

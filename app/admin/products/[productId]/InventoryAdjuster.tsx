@@ -105,6 +105,13 @@ export default function InventoryAdjuster({
       setReason("");
 
       router.refresh();
+      window.dispatchEvent(
+        new CustomEvent("inventory-updated", {
+          detail: {
+            productId,
+          },
+        }),
+      );
     } catch (error) {
       setError(
         error instanceof Error ? error.message : "Something went wrong.",

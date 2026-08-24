@@ -246,17 +246,26 @@ export async function POST(request: Request) {
     // The webhook should only confirm the payment.
     //
 
+    // await prisma.order.update({
+    //   where: {
+    //     id: order.id,
+    //   },
+    //   data: {
+    //     paymentStatus: "PAID",
+    //     status: "CONFIRMED",
+    //     paidAt: new Date(),
+    //   },
+    // });
+
     await prisma.order.update({
       where: {
         id: order.id,
       },
       data: {
         paymentStatus: "PAID",
-        status: "CONFIRMED",
         paidAt: new Date(),
       },
     });
-
     console.log(`Order #${order.id} marked as PAID via Paystack webhook`);
 
     // --------------------------------------------------

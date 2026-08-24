@@ -1,9 +1,12 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin";
+
 import InventoryAdjuster from "./InventoryAdjuster";
+import InventoryHistory from "./InventoryHistory";
 import ProductStatusButton from "../ProductStatusButton";
 
 type AdminProductPageProps = {
@@ -69,15 +72,18 @@ export default async function AdminProductPage({
           </div>
         </div>
 
+        {/* Product overview */}
         <div className="grid gap-8 lg:grid-cols-3">
           {/* Product image */}
-          <section className="rounded-xl border bg-white p-6 lg:col-span-1">
+          <section className="rounded-xl border bg-white p-6">
             <h2 className="mb-5 text-xl font-semibold">Product Image</h2>
 
             <div className="overflow-hidden rounded-lg border bg-gray-50">
-              <img
+              <Image
                 src={product.image}
                 alt={product.name}
+                width={600}
+                height={600}
                 className="aspect-square w-full object-cover"
               />
             </div>
@@ -90,11 +96,13 @@ export default async function AdminProductPage({
             <div className="grid gap-6 sm:grid-cols-2">
               <div>
                 <p className="text-sm text-gray-500">Name</p>
+
                 <p className="mt-1 font-medium">{product.name}</p>
               </div>
 
               <div>
                 <p className="text-sm text-gray-500">Category</p>
+
                 <p className="mt-1 font-medium capitalize">
                   {product.category}
                 </p>
@@ -102,6 +110,7 @@ export default async function AdminProductPage({
 
               <div>
                 <p className="text-sm text-gray-500">Price</p>
+
                 <p className="mt-1 text-lg font-semibold">
                   ₦{product.price.toLocaleString()}
                 </p>
@@ -138,14 +147,9 @@ export default async function AdminProductPage({
               </div>
 
               <div>
-                <p className="text-sm text-gray-500">Created</p>
-                <p className="mt-1 font-medium">
-                  {product.createdAt.toLocaleDateString("en-NG", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
-                </p>
+                <p className="text-sm text-gray-500">Product ID</p>
+
+                <p className="mt-1 font-medium">#{product.id}</p>
               </div>
             </div>
 
@@ -160,40 +164,59 @@ export default async function AdminProductPage({
           </section>
         </div>
 
-        {/* Product metadata */}
+        {/* Inventory management */}
         <section className="mt-8 rounded-xl border bg-white p-6">
-          <h2 className="mb-5 text-xl font-semibold">Product Information</h2>
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold">Inventory Management</h2>
 
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            <div>
-              <p className="text-sm text-gray-500">Product ID</p>
-              <p className="mt-1 font-medium">#{product.id}</p>
-            </div>
-
-            <div>
-              <p className="text-sm text-gray-500">Stock</p>
-              <p className="mt-1 font-medium">{product.stock}</p>
-            </div>
-
-            <div>
-              <p className="text-sm text-gray-500">Created</p>
-              <p className="mt-1 font-medium">
-                {product.createdAt.toLocaleDateString("en-NG")}
-              </p>
-            </div>
-
-            <div>
-              <p className="text-sm text-gray-500">Last Updated</p>
-              <p className="mt-1 font-medium">
-                {product.updatedAt.toLocaleDateString("en-NG")}
-              </p>
-            </div>
+            <p className="mt-1 text-sm text-gray-500">
+              Adjust stock and track every inventory movement.
+            </p>
           </div>
 
           <InventoryAdjuster
             productId={product.id}
             currentStock={product.stock}
           />
+
+          <InventoryHistory productId={product.id} />
+        </section>
+
+        {/* Product metadata */}
+        <section className="mt-8 rounded-xl border bg-white p-6">
+          <h2 className="mb-5 text-xl font-semibold">Product Metadata</h2>
+
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div>
+              <p className="text-sm text-gray-500">Product ID</p>
+
+              <p className="mt-1 font-medium">#{product.id}</p>
+            </div>
+
+            <div>
+              <p className="text-sm text-gray-500">Created</p>
+
+              <p className="mt-1 font-medium">
+                {product.createdAt.toLocaleDateString("en-NG", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-sm text-gray-500">Last Updated</p>
+
+              <p className="mt-1 font-medium">
+                {product.updatedAt.toLocaleDateString("en-NG", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </p>
+            </div>
+          </div>
         </section>
       </div>
     </main>

@@ -75,13 +75,209 @@ export async function POST(request: Request) {
     const total = subtotal + deliveryFee;
 
     // 5. Create order and update stock in ONE transaction
+    // const order = await prisma.$transaction(async (tx) => {
+    //   // Create order
+    //   const estimatedDeliveryAt = new Date();
+
+    //   estimatedDeliveryAt.setDate(
+    //     estimatedDeliveryAt.getDate() + selectedDelivery.maxDays,
+    //   );
+    //   const newOrder = await tx.order.create({
+    //     data: {
+    //       userId: user.id,
+
+    //       status: "PENDING",
+    //       paymentStatus: "PENDING",
+
+    //       subtotal,
+    //       deliveryFee,
+    //       total,
+    //       deliveryMethod,
+    //       estimatedDeliveryAt,
+    //       fullName,
+    //       phone,
+    //       address,
+    //       city,
+    //       state,
+    //       country,
+
+    //       items: {
+    //         create: cart.items.map((item) => ({
+    //           productId: item.product.id,
+    //           productName: item.product.name,
+    //           price: item.product.price,
+    //           quantity: item.quantity,
+    //         })),
+    //       },
+    //     },
+
+    //     include: {
+    //       items: true,
+    //     },
+    //   });
+
+    //   return newOrder;
+    // });
+
+    // const order = await prisma.$transaction(async (tx) => {
+    //   // 1. Verify stock again inside the transaction
+    //   // This is important because stock may have changed
+    //   // since the cart was created.
+    //   for (const item of cart.items) {
+    //     const product = await tx.product.findUnique({
+    //       where: {
+    //         id: item.product.id,
+    //       },
+    //     });
+
+    //     if (!product) {
+    //       throw new Error(`Product "${item.product.name}" no longer exists.`);
+    //     }
+
+    //     if (product.stock < item.quantity) {
+    //       throw new Error(
+    //         `Not enough stock for "${product.name}". Available: ${product.stock}.`,
+    //       );
+    //     }
+    //   }
+
+    //   // 2. Create the order
+    //   const estimatedDeliveryAt = new Date();
+
+    //   estimatedDeliveryAt.setDate(
+    //     estimatedDeliveryAt.getDate() + selectedDelivery.maxDays,
+    //   );
+
+    //   const newOrder = await tx.order.create({
+    //     data: {
+    //       userId: user.id,
+
+    //       status: "PENDING",
+    //       paymentStatus: "PENDING",
+
+    //       subtotal,
+    //       deliveryFee,
+    //       total,
+    //       deliveryMethod,
+    //       estimatedDeliveryAt,
+
+    //       fullName,
+    //       phone,
+    //       address,
+    //       city,
+    //       state,
+    //       country,
+
+    //       items: {
+    //         create: cart.items.map((item) => ({
+    //           productId: item.product.id,
+    //           productName: item.product.name,
+    //           price: item.product.price,
+    //           quantity: item.quantity,
+    //         })),
+    //       },
+    //     },
+
+    //     include: {
+    //       items: true,
+    //     },
+    //   });
+
+    //   // 3. Deduct stock + create inventory history
+    //   //   for (const item of cart.items) {
+    //   //     await tx.product.update({
+    //   //       where: {
+    //   //         id: item.product.id,
+    //   //       },
+    //   //       data: {
+    //   //         stock: {
+    //   //           decrement: item.quantity,
+    //   //         },
+    //   //       },
+    //   //     });
+
+    //   //     await tx.inventoryTransaction.create({
+    //   //       data: {
+    //   //         productId: item.product.id,
+    //   //         quantity: -item.quantity,
+    //   //         type: "ORDER",
+    //   //         reason: `Order #${newOrder.id}`,
+    //   //       },
+    //   //     });
+    //   //   }
+
+    //   for (const item of cart.items) {
+    //     const updatedProduct = await tx.product.updateMany({
+    //       where: {
+    //         id: item.product.id,
+    //         stock: {
+    //           gte: item.quantity,
+    //         },
+    //       },
+    //       data: {
+    //         stock: {
+    //           decrement: item.quantity,
+    //         },
+    //       },
+    //     });
+
+    //     if (updatedProduct.count !== 1) {
+    //       throw new Error(`Not enough stock for "${item.product.name}".`);
+    //     }
+
+    //     await tx.inventoryTransaction.create({
+    //       data: {
+    //         productId: item.product.id,
+    //         quantity: -item.quantity,
+    //         type: "ORDER",
+    //         reason: `Order #${newOrder.id}`,
+    //       },
+    //     });
+    //   }
+
+    //   return newOrder;
+    // });
+
     const order = await prisma.$transaction(async (tx) => {
-      // Create order
+      // --------------------------------------------------
+      // 1. Check and reserve stock safely
+      // --------------------------------------------------
+
+      for (const item of cart.items) {
+        const updatedProduct = await tx.product.updateMany({
+          where: {
+            id: item.product.id,
+            stock: {
+              gte: item.quantity,
+            },
+          },
+          data: {
+            stock: {
+              decrement: item.quantity,
+            },
+          },
+        });
+
+        // If no product was updated, stock was insufficient
+        if (updatedProduct.count !== 1) {
+          throw new Error(`Not enough stock for "${item.product.name}".`);
+        }
+      }
+
+      // --------------------------------------------------
+      // 2. Calculate estimated delivery date
+      // --------------------------------------------------
+
       const estimatedDeliveryAt = new Date();
 
       estimatedDeliveryAt.setDate(
         estimatedDeliveryAt.getDate() + selectedDelivery.maxDays,
       );
+
+      // --------------------------------------------------
+      // 3. Create the order
+      // --------------------------------------------------
+
       const newOrder = await tx.order.create({
         data: {
           userId: user.id,
@@ -94,6 +290,7 @@ export async function POST(request: Request) {
           total,
           deliveryMethod,
           estimatedDeliveryAt,
+
           fullName,
           phone,
           address,
@@ -115,6 +312,25 @@ export async function POST(request: Request) {
           items: true,
         },
       });
+
+      // --------------------------------------------------
+      // 4. Record inventory history
+      // --------------------------------------------------
+
+      for (const item of cart.items) {
+        await tx.inventoryTransaction.create({
+          data: {
+            productId: item.product.id,
+            quantity: -item.quantity,
+            type: "ORDER",
+            reason: `Order #${newOrder.id}`,
+          },
+        });
+      }
+
+      // --------------------------------------------------
+      // 5. Return the completed order
+      // --------------------------------------------------
 
       return newOrder;
     });
