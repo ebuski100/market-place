@@ -18,7 +18,7 @@ type ProductFormProps = {
 export default function ProductForm({ product }: ProductFormProps) {
   const router = useRouter();
 
-  const editing = Boolean(product);
+  const editing = Boolean(product); //
 
   const [name, setName] = useState(product?.name ?? "");
 
@@ -42,11 +42,11 @@ export default function ProductForm({ product }: ProductFormProps) {
     setError("");
 
     try {
-      const url = editing
+      const url = product
         ? `/api/admin/products/${product.id}`
         : "/api/admin/products";
 
-      const method = editing ? "PATCH" : "POST";
+      const method = product ? "PATCH" : "POST";
 
       const response = await fetch(url, {
         method,
