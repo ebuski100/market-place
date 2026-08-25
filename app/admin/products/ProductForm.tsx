@@ -174,7 +174,7 @@ export default function ProductForm({ product }: ProductFormProps) {
         disabled={loading}
         className="w-full rounded-md bg-black px-6 py-3 font-medium text-white disabled:opacity-50"
       >
-        {loading ? "Saving..." : editing ? "Update Product" : "Create Product"}
+        {loading ? "Saving..." : product ? "Update Product" : "Create Product"}
       </button>
     </form>
   );
