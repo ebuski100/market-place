@@ -25,8 +25,25 @@ export async function getCurrentUser() {
 
   // Check whether the session has expired
   if (session.expiresAt < new Date()) {
-    // Delete expired session
-    await prisma.session.delete({
+    // Use deleteMany so this does not throw
+    // if another request has already deleted the session.
+    await prisma.session.deleteMany({
+      where: {
+        id: session.id,
+      },
+    });
+
+    return null;
+  }
+
+  // Check whether the account is active
+  if (!session.user.isActive) {
+    // Invalidate the database session.
+    //
+    // We intentionally do NOT delete the cookie here because
+    // getCurrentUser() can be called from Server Components,
+    // where cookies cannot be modified.
+    await prisma.session.deleteMany({
       where: {
         id: session.id,
       },

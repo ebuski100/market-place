@@ -1,32 +1,32 @@
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/admin";
-import type { OrderStatus } from "@/lib/generated/prisma/client";
+import { getCurrentUser } from "@/lib/auth";
+import { OrderStatus } from "@/lib/generated/prisma/client";
 
 const validStatuses: OrderStatus[] = [
-  "PENDING",
-  "CONFIRMED",
-  "PROCESSING",
-  "SHIPPED",
-  "OUT_FOR_DELIVERY",
-  "DELIVERED",
-  "CANCELLED",
+  OrderStatus.PENDING,
+  OrderStatus.CONFIRMED,
+  OrderStatus.PROCESSING,
+  OrderStatus.SHIPPED,
+  OrderStatus.OUT_FOR_DELIVERY,
+  OrderStatus.DELIVERED,
+  OrderStatus.CANCELLED,
 ];
 
 const statusOrder: OrderStatus[] = [
-  "PENDING",
-  "CONFIRMED",
-  "PROCESSING",
-  "SHIPPED",
-  "OUT_FOR_DELIVERY",
-  "DELIVERED",
+  OrderStatus.PENDING,
+  OrderStatus.CONFIRMED,
+  OrderStatus.PROCESSING,
+  OrderStatus.SHIPPED,
+  OrderStatus.OUT_FOR_DELIVERY,
+  OrderStatus.DELIVERED,
 ];
 
 const fulfillmentStatuses: OrderStatus[] = [
-  "CONFIRMED",
-  "PROCESSING",
-  "SHIPPED",
-  "OUT_FOR_DELIVERY",
-  "DELIVERED",
+  OrderStatus.CONFIRMED,
+  OrderStatus.PROCESSING,
+  OrderStatus.SHIPPED,
+  OrderStatus.OUT_FOR_DELIVERY,
+  OrderStatus.DELIVERED,
 ];
 
 type RouteContext = {
@@ -38,10 +38,32 @@ type RouteContext = {
 export async function PATCH(request: Request, { params }: RouteContext) {
   try {
     // --------------------------------------------------
-    // 1. Make sure the requester is an admin
+    // 1. Authenticate admin
     // --------------------------------------------------
 
-    await requireAdmin();
+    const user = await getCurrentUser();
+
+    if (!user) {
+      return Response.json(
+        {
+          error: "Unauthorized",
+        },
+        {
+          status: 401,
+        },
+      );
+    }
+
+    if (user.role !== "ADMIN") {
+      return Response.json(
+        {
+          error: "Forbidden",
+        },
+        {
+          status: 403,
+        },
+      );
+    }
 
     // --------------------------------------------------
     // 2. Get order ID
@@ -71,7 +93,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     const newStatus = body.status as OrderStatus;
 
     // --------------------------------------------------
-    // 4. Validate requested status
+    // 4. Validate status
     // --------------------------------------------------
 
     if (!validStatuses.includes(newStatus)) {
@@ -86,118 +108,80 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     }
 
     // --------------------------------------------------
-    // 5. Find order
-    // --------------------------------------------------
-
-    const order = await prisma.order.findUnique({
-      where: {
-        id,
-      },
-      include: {
-        items: true,
-      },
-    });
-
-    if (!order) {
-      return Response.json(
-        {
-          error: "Order not found",
-        },
-        {
-          status: 404,
-        },
-      );
-    }
-
-    // --------------------------------------------------
-    // 6. Don't update if status is already the same
-    // --------------------------------------------------
-
-    if (order.status === newStatus) {
-      return Response.json({
-        message: "Order already has this status",
-        order,
-      });
-    }
-
-    // --------------------------------------------------
-    // 7. Don't modify cancelled orders
-    // --------------------------------------------------
-
-    if (order.status === "CANCELLED") {
-      return Response.json(
-        {
-          error: "A cancelled order cannot be updated",
-        },
-        {
-          status: 400,
-        },
-      );
-    }
-
-    // --------------------------------------------------
-    // 8. Don't modify delivered orders
-    // --------------------------------------------------
-
-    if (order.status === "DELIVERED") {
-      return Response.json(
-        {
-          error: "A delivered order cannot be updated",
-        },
-        {
-          status: 400,
-        },
-      );
-    }
-
-    // --------------------------------------------------
-    // 9. Payment protection
-    // --------------------------------------------------
-
-    if (
-      fulfillmentStatuses.includes(newStatus) &&
-      order.paymentStatus !== "PAID"
-    ) {
-      return Response.json(
-        {
-          error: "Payment must be confirmed before fulfilling this order",
-        },
-        {
-          status: 400,
-        },
-      );
-    }
-
-    const currentIndex = statusOrder.indexOf(order.status);
-    const newIndex = statusOrder.indexOf(newStatus);
-
-    if (currentIndex !== -1 && newIndex !== -1 && newIndex > currentIndex + 1) {
-      return Response.json(
-        {
-          error: `You cannot move an order directly from ${order.status} to ${newStatus}`,
-        },
-        {
-          status: 400,
-        },
-      );
-    }
-
-    // --------------------------------------------------
-    // 11. Update order inside a transaction
+    // 5. Perform everything inside one transaction
     // --------------------------------------------------
 
     const updatedOrder = await prisma.$transaction(async (tx) => {
+      const order = await tx.order.findUnique({
+        where: {
+          id,
+        },
+        include: {
+          items: true,
+        },
+      });
+
+      if (!order) {
+        throw new Error("ORDER_NOT_FOUND");
+      }
+
+      // ----------------------------------------------
+      // Same status
+      // ----------------------------------------------
+
+      if (order.status === newStatus) {
+        return order;
+      }
+
+      // ----------------------------------------------
+      // Cancelled orders cannot be modified
+      // ----------------------------------------------
+
+      if (order.status === OrderStatus.CANCELLED) {
+        throw new Error("CANCELLED_ORDER");
+      }
+
+      // ----------------------------------------------
+      // Delivered orders cannot be modified
+      // ----------------------------------------------
+
+      if (order.status === OrderStatus.DELIVERED) {
+        throw new Error("DELIVERED_ORDER");
+      }
+
+      // ----------------------------------------------
+      // Payment protection
+      // ----------------------------------------------
+
+      if (
+        fulfillmentStatuses.includes(newStatus) &&
+        order.paymentStatus !== "PAID"
+      ) {
+        throw new Error("PAYMENT_REQUIRED");
+      }
+
+      // ----------------------------------------------
+      // Prevent skipping fulfillment stages
+      // ----------------------------------------------
+
+      const currentIndex = statusOrder.indexOf(order.status);
+      const newIndex = statusOrder.indexOf(newStatus);
+
+      if (
+        currentIndex !== -1 &&
+        newIndex !== -1 &&
+        newIndex > currentIndex + 1
+      ) {
+        throw new Error("INVALID_STATUS_TRANSITION");
+      }
+
       // ----------------------------------------------
       // Cancellation
       // ----------------------------------------------
 
-      if (newStatus === "CANCELLED") {
-        /*
-         * Restore the stock that was reserved for
-         * this order.
-         */
-
+      if (newStatus === OrderStatus.CANCELLED) {
         for (const item of order.items) {
+          // Restore stock
           await tx.product.update({
             where: {
               id: item.productId,
@@ -209,10 +193,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
             },
           });
 
-          /*
-           * Record the inventory change.
-           */
-
+          // Record inventory transaction
           await tx.inventoryTransaction.create({
             data: {
               productId: item.productId,
@@ -225,7 +206,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       }
 
       // ----------------------------------------------
-      // Update order status
+      // Update order
       // ----------------------------------------------
 
       return tx.order.update({
@@ -235,12 +216,11 @@ export async function PATCH(request: Request, { params }: RouteContext) {
         data: {
           status: newStatus,
         },
+        include: {
+          items: true,
+        },
       });
     });
-
-    // --------------------------------------------------
-    // 12. Return updated order
-    // --------------------------------------------------
 
     return Response.json({
       message: "Order status updated successfully",
@@ -249,12 +229,48 @@ export async function PATCH(request: Request, { params }: RouteContext) {
   } catch (error) {
     console.error("Admin order status update error:", error);
 
+    if (error instanceof Error) {
+      switch (error.message) {
+        case "ORDER_NOT_FOUND":
+          return Response.json({ error: "Order not found" }, { status: 404 });
+
+        case "CANCELLED_ORDER":
+          return Response.json(
+            {
+              error: "A cancelled order cannot be updated.",
+            },
+            { status: 400 },
+          );
+
+        case "DELIVERED_ORDER":
+          return Response.json(
+            {
+              error: "A delivered order cannot be updated.",
+            },
+            { status: 400 },
+          );
+
+        case "PAYMENT_REQUIRED":
+          return Response.json(
+            {
+              error: "Payment must be confirmed before fulfilling this order.",
+            },
+            { status: 400 },
+          );
+
+        case "INVALID_STATUS_TRANSITION":
+          return Response.json(
+            {
+              error: "You cannot skip order fulfillment stages.",
+            },
+            { status: 400 },
+          );
+      }
+    }
+
     return Response.json(
       {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Failed to update order status",
+        error: "Failed to update order status",
       },
       {
         status: 500,

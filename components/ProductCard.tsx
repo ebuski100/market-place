@@ -1,41 +1,72 @@
 import Link from "next/link";
 import type { Product } from "@/types/product";
 
+import WishlistButton from "@/components/WishlistButton";
+
+import AddToCartIcon from "@/components/AddToCartIcon";
+
 type ProductCardProps = {
   product: Product;
 };
 
 export default function ProductCard({ product }: ProductCardProps) {
   return (
-    <article className="border rounded-lg overflow-hidden">
-      <div className="aspect-square bg-gray-100">
-        <img
-          src={product.image}
-          alt={product.name}
-          className="w-full h-[50px] "
-        />
-      </div>
+    <article className="group overflow-hidden rounded-xl bg-white shadow-sm transition-shadow duration-200 hover:shadow-md">
+      {/* Product image */}
+      <div className="relative aspect-square overflow-hidden bg-gray-100">
+        <Link href={`/products/${product.id}`}>
+          <img
+            src={product.image}
+            alt={product.name}
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        </Link>
 
-      <div className="p-4">
-        <p className="text-sm text-gray-500 capitalize">{product.category}</p>
-
-        <h2 className="text-xl font-semibold mt-1">{product.name}</h2>
-
-        <p className="text-gray-600 mt-2">{product.description}</p>
-
-        <div className="flex items-center justify-between mt-4">
-          <p className="font-bold">₦{product.price.toLocaleString()}</p>
-
-          <Link
-            href={`/products/${product.id}`}
-            className="px-4 py-2 rounded-md bg-black text-white"
-          >
-            View
-          </Link>
+        {/* Wishlist */}
+        <div className="absolute right-3 top-3">
+          <WishlistButton productId={product.id} />
         </div>
 
-        <p className="text-sm text-gray-500 mt-2">
-          {product.stock > 0 ? `${product.stock} available` : "Out of stock"}
+        <div className="absolute bottom-3 right-3">
+          <AddToCartIcon product={product} />
+        </div>
+
+        {/* Out of stock */}
+        {product.stock <= 0 && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+            <span className="rounded-full bg-white px-3 py-1 text-sm font-medium text-gray-800 text-red-400">
+              Out of stock
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Product information */}
+      <div className="p-4">
+        <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+          {product.category}
+        </p>
+
+        <Link href={`/products/${product.id}`}>
+          <h2 className="mt-1 line-clamp-1 text-base font-semibold text-gray-900 transition-colors hover:text-gray-600 sm:text-lg">
+            {product.name}
+          </h2>
+        </Link>
+
+        <p className="mt-2 line-clamp-2 text-sm text-gray-500">
+          {product.description}
+        </p>
+
+        {/* Price */}
+        <p className="mt-4 text-lg font-bold text-gray-900">
+          ₦{product.price.toLocaleString()}
+        </p>
+
+        {/* Stock */}
+        <p className="mt-1 text-green-400 text-xs ">
+          {product.stock > 0
+            ? `${product.stock} available`
+            : "Currently unavailable"}
         </p>
       </div>
     </article>

@@ -68,41 +68,22 @@ export default function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-white">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-6">
+    <header className="sticky top-0 z-50 w-full  bg-white ">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between py-2 ">
         {/* Logo */}
-        <Link href="/" className="text-2xl font-bold tracking-tight">
-          E-Commerce
+        <Link
+          href="/"
+          className="text-xl font-bold tracking-tight flex text-green-600"
+        >
+          <img src="/shopping-bag.png" height={30} width={30} alt="" />
+          <span className="hidden md:block">marketPlace</span>
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden items-center gap-6 md:flex">
-          <Link
-            href="/"
-            className="text-sm font-medium text-gray-700 transition hover:text-green-600"
-          >
-            Home
-          </Link>
-
-          <Link
-            href="/shop"
-            className="text-sm font-medium text-gray-700 transition hover:text-green-600"
-          >
-            Shop
-          </Link>
-
-          <Link
-            href="/wishlist"
-            className="flex items-center gap-1 text-sm font-medium text-gray-700 transition hover:text-green-600"
-          >
-            <Heart size={18} />
-            Wishlist
-          </Link>
-        </nav>
 
         {/* Search */}
-        <div className="mx-6 hidden max-w-md flex-1 md:block">
-          <div className="flex items-center rounded-full border bg-gray-50 px-4">
+        <div className="mx-4 max-w-md flex-1 md:block">
+          <div className="flex items-center rounded-2xl  bg-gray-100 px-4">
             <Search size={18} className="text-gray-400" />
 
             <input
