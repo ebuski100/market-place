@@ -1,15 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   Search,
   ShoppingCart,
-  Heart,
   User,
   LogIn,
   UserPlus,
   LogOut,
+  Settings,
   Menu,
   X,
 } from "lucide-react";
@@ -22,6 +22,7 @@ type User = {
 
 export default function Header() {
   const [user, setUser] = useState<User | null>(null);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -48,6 +49,25 @@ export default function Header() {
     getUser();
   }, []);
 
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        mobileMenuRef.current &&
+        !mobileMenuRef.current.contains(event.target as Node)
+      ) {
+        setMobileMenuOpen(false);
+      }
+    }
+
+    if (mobileMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [mobileMenuOpen]);
+
   async function handleLogout() {
     try {
       const response = await fetch("/api/auth/logout", {
@@ -68,7 +88,7 @@ export default function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full  bg-white ">
+    <header className="sticky top-0 z-50 w-full  bg-white px-4">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between py-2 ">
         {/* Logo */}
         <Link
@@ -159,87 +179,94 @@ export default function Header() {
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="border-t bg-white px-4 py-5 md:hidden">
-          <nav className="flex flex-col gap-4">
-            <Link
-              href="/"
-              onClick={() => setMobileMenuOpen(false)}
-              className="font-medium"
-            >
-              Home
-            </Link>
+        <>
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+
+          <div
+            ref={mobileMenuRef}
+            className=" absolute top-3 z-50 mt-11 w-90   bg-white px-4 py-5 md:hidden  shadow-[0_6px_12px_-4px_rgba(0,0,0,0.18)]"
+          >
+            <nav className="flex flex-col gap-4 border-b border-gray-500">
+              {!loading && !user && (
+                <>
+                  <Link
+                    href="/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-2 font-medium"
+                  >
+                    <LogIn size={18} />
+                    Login
+                  </Link>
+
+                  <Link
+                    href="/register"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-2 font-medium mb-3"
+                  >
+                    <UserPlus size={18} />
+                    Register
+                  </Link>
+                </>
+              )}
+
+              {!loading && user && (
+                <>
+                  <Link
+                    href="/account"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-2 font-medium"
+                  >
+                    <User size={18} />
+                    Hi,{user.name}
+                  </Link>
+
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 text-left font-medium text-red-500 "
+                  >
+                    <LogOut size={18} />
+                    Logout
+                  </button>
+
+                  <Link
+                    href="/settings"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-2 font-medium text-gray-600  mb-2"
+                  >
+                    <Settings size={18} />
+                    settings
+                  </Link>
+                </>
+              )}
+            </nav>
 
             <Link
-              href="/shop"
+              href="/settings"
               onClick={() => setMobileMenuOpen(false)}
-              className="font-medium"
+              className="flex items-center gap-2  text-gray-600 mt-3"
             >
-              Shop
+              Help Center
             </Link>
-
             <Link
-              href="/wishlist"
+              href="/settings"
               onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-2 font-medium"
+              className="flex items-center gap-2  text-gray-600 mt-3"
             >
-              <Heart size={18} />
-              Wishlist
+              Return & refund Policy
             </Link>
-
             <Link
-              href="/cart"
+              href="/settings"
               onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-2 font-medium"
+              className="flex items-center gap-2  text-gray-600 mt-3"
             >
-              <ShoppingCart size={18} />
-              Cart
+              Disputes & Reports
             </Link>
-
-            {!loading && !user && (
-              <>
-                <Link
-                  href="/login"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-2 font-medium"
-                >
-                  <LogIn size={18} />
-                  Login
-                </Link>
-
-                <Link
-                  href="/register"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-2 font-medium"
-                >
-                  <UserPlus size={18} />
-                  Register
-                </Link>
-              </>
-            )}
-
-            {!loading && user && (
-              <>
-                <Link
-                  href="/account"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-2 font-medium"
-                >
-                  <User size={18} />
-                  {user.name}
-                </Link>
-
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="flex items-center gap-2 text-left font-medium text-red-500"
-                >
-                  <LogOut size={18} />
-                  Logout
-                </button>
-              </>
-            )}
-          </nav>
-        </div>
+          </div>
+        </>
       )}
     </header>
   );

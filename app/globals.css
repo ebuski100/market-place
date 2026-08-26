@@ -43,3 +43,16 @@
 .cart-pop {
   animation: cart-pop 350ms ease-out;
 }
+
+[data-sonner-toaster][data-y-position="bottom"] {
+  bottom: 90px !important;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
