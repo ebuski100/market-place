@@ -187,7 +187,7 @@ export default function Header() {
 
           <div
             ref={mobileMenuRef}
-            className=" absolute top-3 z-50 mt-11 w-90   bg-white px-4 py-5 md:hidden  shadow-[0_6px_12px_-4px_rgba(0,0,0,0.18)]"
+            className=" absolute top-3 z-50 mt-11 w-full rounded-2xl left-10   bg-white px-4 py-5 md:hidden  shadow-[0_6px_12px_-4px_rgba(0,0,0,0.18)]"
           >
             <nav className="flex flex-col gap-4 border-b border-gray-500">
               {!loading && !user && (
