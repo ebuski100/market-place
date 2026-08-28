@@ -1,9 +1,8 @@
 import type { Product } from "@/types/product";
-// import ProductCard from "@/components/ProductCard";
+
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import Categories from "@/components/Categories";
-// import PromoBanner from "@/components/PromoBanner";
 
 import PromoCarousel from "@/components/PromoCarousel";
 import TodaysDeals from "@/components/TodaysDeals";
@@ -29,12 +28,11 @@ export default async function HomePage() {
       <Header />
       <Categories categories={categories} />
 
-      <PromoCarousel products={products} />
+      <PromoCarousel />
 
       <TodaysDeals products={products} />
 
-      <MoreToLove products={products} />
-
+      <MoreToLove products={products} excludeWishlisted={false} />
       <Footer />
     </main>
   );

@@ -6,7 +6,7 @@ import { deliveryOptions } from "@/lib/delivery";
 import type { Cart } from "@/types/cart";
 import type { Address } from "@/types/address";
 import type { CheckoutInput } from "@/lib/validations/checkout";
-
+import { useStoreCounts } from "@/lib/store/useStoreCounts";
 type CheckoutClientProps = {
   cart: Cart;
 };
@@ -14,6 +14,8 @@ type CheckoutClientProps = {
 export default function CheckoutClient({ cart }: CheckoutClientProps) {
   const [deliveryMethod, setDeliveryMethod] =
     useState<CheckoutInput["deliveryMethod"]>("free");
+
+  const { loadCartCount, loadOrderCount } = useStoreCounts();
 
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
 
@@ -68,6 +70,9 @@ export default function CheckoutClient({ cart }: CheckoutClientProps) {
         setError(orderData.error || "Failed to create order");
         return;
       }
+
+      await loadCartCount();
+      await loadOrderCount();
 
       const orderId = orderData.order.id;
 

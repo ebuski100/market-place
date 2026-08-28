@@ -26,7 +26,7 @@ export default async function OrdersPage() {
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-5xl p-8">
-      <h1 className="mb-8 text-3xl font-bold">My Orders</h1>
+      <h1 className="mb-8 text-3xl font-bold text-green-700">My Orders</h1>
 
       {orders.length === 0 ? (
         <div className="rounded-lg border p-8 text-center">
@@ -51,7 +51,7 @@ export default async function OrdersPage() {
               <Link
                 key={order.id}
                 href={`/orders/${order.id}`}
-                className="block rounded-lg border p-6 transition hover:bg-gray-50"
+                className="block rounded-2xl border border-gray-200 shadow-sm bg-gray-100/30 p-6 transition hover:bg-gray-50"
               >
                 <div className="flex flex-col justify-between gap-4 sm:flex-row">
                   <div>
@@ -93,7 +93,7 @@ export default async function OrdersPage() {
                   </div>
                 </div>
 
-                <div className="mt-4 border-t pt-4 text-sm font-medium">
+                <div className="mt-4 border-t border-gray-600 pt-4 text-sm font-medium">
                   View Order →
                 </div>
               </Link>

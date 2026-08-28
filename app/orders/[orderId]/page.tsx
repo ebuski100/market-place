@@ -29,20 +29,6 @@ export default async function OrderPage({ params }: OrderPageProps) {
     notFound();
   }
 
-  // --------------------------------------------------
-  // 3. Get order
-  // --------------------------------------------------
-  //
-  // IMPORTANT:
-  //
-  // We check BOTH:
-  //
-  // id
-  // userId
-  //
-  // This prevents a customer from viewing
-  // another customer's order.
-  // --------------------------------------------------
   console.log("ORDER DEBUG:", {
     orderId,
     id,
@@ -103,9 +89,9 @@ export default async function OrderPage({ params }: OrderPageProps) {
         </div>
 
         {/* Status badges */}
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 ">
           <span
-            className={`rounded-full px-3 py-1 text-sm font-medium ${
+            className={`rounded-full px-3 md:rounded-3xl text-sm font-medium flex items-center ${
               order.paymentStatus === "PAID"
                 ? "bg-green-100 text-green-700"
                 : "bg-yellow-100 text-yellow-700"
@@ -114,7 +100,7 @@ export default async function OrderPage({ params }: OrderPageProps) {
             Payment: {order.paymentStatus}
           </span>
 
-          <span className="rounded-full bg-gray-100 px-3 py-1 text-sm font-medium">
+          <span className="rounded-full md:rounded-3xl flex items-center bg-gray-100 px-3 py-1 text-sm font-medium">
             {formatStatus(currentStatus)}
           </span>
         </div>
@@ -123,55 +109,132 @@ export default async function OrderPage({ params }: OrderPageProps) {
       <div className="grid gap-8 md:grid-cols-3">
         {/* Main content */}
         <section className="space-y-8 md:col-span-2">
+          <div className="rounded-2xl border border-gray-200 shadow-sm p-6 overflow-hidden bg-gray-100/30">
+            <h2 className="mb-6 text-xl font-semibold text-green-500">Items</h2>
+
+            {order.items.map((item) => (
+              <div
+                key={item.id}
+                className="group flex gap-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm my-3 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md sm:p-5"
+              >
+                {/* Product image */}
+                <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-gray-100 sm:h-28 sm:w-28">
+                  <img
+                    src={item.product.image}
+                    alt={item.productName}
+                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                </div>
+
+                {/* Product information */}
+                <div className="flex min-w-0 flex-1 flex-col justify-between">
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
+                      Order item
+                    </p>
+
+                    <h3 className="mt-1 line-clamp-2 text-sm font-semibold text-gray-900 sm:text-base">
+                      {item.productName}
+                    </h3>
+                  </div>
+
+                  <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+                    {/* Quantity */}
+                    <div className="flex items-center gap-1.5 text-sm text-gray-500">
+                      <span>Qty</span>
+                      <span className="font-semibold text-gray-800">
+                        {item.quantity}
+                      </span>
+                    </div>
+
+                    {/* Unit price */}
+                    <div className="text-sm text-gray-500">
+                      ₦{item.price.toLocaleString("en-NG")} each
+                    </div>
+                  </div>
+                </div>
+
+                {/* Total */}
+                <div className="flex shrink-0  items-end ">
+                  {/* <span className="text-xs text-gray-400">Total</span> */}
+
+                  <p className="text-base font-bold text-gray-900 sm:text-lg">
+                    ₦{(item.price * item.quantity).toLocaleString("en-NG")}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
           {/* Order Status */}
-          <div className="rounded-lg border p-6">
-            <h2 className="mb-6 text-xl font-semibold">Order Status</h2>
 
-            <OrderTimeline status={currentStatus} />
+          <div className="overflow-hidden rounded-2xl border border-gray-200  shadow-sm bg-gray-100/30">
+            {/* Header */}
+            <div className="border-b border-gray-100 px-6 py-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-bold text-green-500">
+                    Order Status
+                  </h2>
 
+                  <p className="mt-1 text-sm text-gray-600">
+                    Track the progress of your order
+                  </p>
+                </div>
+
+                {/* Current status badge */}
+                <span className="hidden rounded-full bg-green-100 px-3 py-1.5 text-xs font-semibold text-green-700 sm:inline-flex">
+                  {currentStatus.replaceAll("_", " ")}
+                </span>
+              </div>
+            </div>
+
+            {/* Timeline */}
+            <div className="px-6 py-8">
+              <OrderTimeline status={currentStatus} />
+            </div>
+
+            {/* Payment confirmation */}
             {order.paymentStatus === "PAID" && order.paidAt && (
-              <div className="mt-6 rounded-md bg-gray-50 p-4">
-                <p className="text-sm text-gray-500">Payment confirmed</p>
+              <div className="mx-6 mb-6 flex items-center gap-4 rounded-xl bg-green-50 p-4">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-100">
+                  <svg
+                    className="h-5 w-5 text-green-600"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                </div>
 
-                <p className="mt-1 font-medium">
-                  {order.paidAt.toLocaleString("en-NG", {
-                    dateStyle: "medium",
-                    timeStyle: "short",
-                  })}
-                </p>
+                <div>
+                  <p className="text-sm font-semibold text-green-800">
+                    Payment confirmed
+                  </p>
+
+                  <p className="mt-0.5 text-sm text-green-700">
+                    {order.paidAt.toLocaleString("en-NG", {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                    })}
+                  </p>
+                </div>
               </div>
             )}
           </div>
 
           {/* Items */}
-          <div className="rounded-lg border p-6">
-            <h2 className="mb-6 text-xl font-semibold">Items</h2>
-
-            <div className="space-y-6">
-              {order.items.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex justify-between gap-4 border-b pb-6 last:border-b-0 last:pb-0"
-                >
-                  <div>
-                    <p className="font-medium">{item.productName}</p>
-
-                    <p className="mt-1 text-sm text-gray-500">
-                      ₦{item.price.toLocaleString()} × {item.quantity}
-                    </p>
-                  </div>
-
-                  <p className="font-semibold">
-                    ₦{(item.price * item.quantity).toLocaleString()}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
 
           {/* Delivery Information */}
-          <div className="rounded-lg border p-6">
-            <h2 className="mb-6 text-xl font-semibold">Delivery Information</h2>
+          <div className="rounded-2xl border border-gray-200 overflow-hidden shadow-sm bg-gray-100/30 p-6">
+            <h2 className="mb-6 text-xl font-semibold text-green-500">
+              Delivery Information
+            </h2>
 
             <div className="space-y-4">
               <div>
@@ -210,8 +273,10 @@ export default async function OrderPage({ params }: OrderPageProps) {
         </section>
 
         {/* Summary */}
-        <aside className="h-fit rounded-lg border p-6">
-          <h2 className="mb-6 text-xl font-semibold">Order Summary</h2>
+        <aside className="h-fit rounded-lg border p-6 border-gray-200 bg-gray-100/40 shadow-md">
+          <h2 className="mb-6 text-xl font-semibold text-green-600">
+            Order Summary
+          </h2>
 
           <div className="space-y-4">
             <div className="flex justify-between">

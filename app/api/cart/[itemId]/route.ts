@@ -68,57 +68,6 @@
 //   }
 // }
 
-// export async function DELETE(
-//   request: Request,
-//   { params }: { params: Promise<{ itemId: string }> },
-// ) {
-//   try {
-//     const user = await getCurrentUser();
-
-//     if (!user) {
-//       return Response.json({ error: "Unauthorized" }, { status: 401 });
-//     }
-
-//     const { itemId } = await params;
-//     const id = Number(itemId);
-
-//     if (Number.isNaN(id)) {
-//       return Response.json({ error: "Invalid cart item ID" }, { status: 400 });
-//     }
-
-//     // Make sure the item belongs to the logged-in user's cart
-//     const cartItem = await prisma.cartItem.findFirst({
-//       where: {
-//         id,
-//         cart: {
-//           userId: user.id,
-//         },
-//       },
-//     });
-
-//     if (!cartItem) {
-//       return Response.json({ error: "Cart item not found" }, { status: 404 });
-//     }
-
-//     await prisma.cartItem.delete({
-//       where: {
-//         id: cartItem.id,
-//       },
-//     });
-
-//     return Response.json({
-//       message: "Item removed from cart",
-//     });
-//   } catch (error) {
-//     console.error("Failed to remove cart item:", error);
-
-//     return Response.json(
-//       { error: "Failed to remove cart item" },
-//       { status: 500 },
-//     );
-//   }
-// }
-
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { updateCartItemSchema } from "@/lib/validations/cart";
@@ -201,6 +150,57 @@ export async function PATCH(request: Request, { params }: RouteContext) {
 
     return Response.json(
       { error: "Failed to update cart item" },
+      { status: 500 },
+    );
+  }
+}
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ itemId: string }> },
+) {
+  try {
+    const user = await getCurrentUser();
+
+    if (!user) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { itemId } = await params;
+    const id = Number(itemId);
+
+    if (Number.isNaN(id)) {
+      return Response.json({ error: "Invalid cart item ID" }, { status: 400 });
+    }
+
+    // Make sure the item belongs to the logged-in user's cart
+    const cartItem = await prisma.cartItem.findFirst({
+      where: {
+        id,
+        cart: {
+          userId: user.id,
+        },
+      },
+    });
+
+    if (!cartItem) {
+      return Response.json({ error: "Cart item not found" }, { status: 404 });
+    }
+
+    await prisma.cartItem.delete({
+      where: {
+        id: cartItem.id,
+      },
+    });
+
+    return Response.json({
+      message: "Item removed from cart",
+    });
+  } catch (error) {
+    console.error("Failed to remove cart item:", error);
+
+    return Response.json(
+      { error: "Failed to remove cart item" },
       { status: 500 },
     );
   }

@@ -4,52 +4,106 @@ import { useMemo, useState } from "react";
 
 import type { Product } from "@/types/product";
 import ProductCard from "@/components/ProductCard";
+import { useWishlistStore } from "@/lib/store/useWishlistStore";
 
 type MoreToLoveProps = {
   products: Product[];
+  excludeWishlisted?: boolean;
 };
 
 const PRODUCTS_PER_LOAD = 8;
 const LOADING_TIME = 800;
 
-export default function MoreToLove({ products }: MoreToLoveProps) {
+export default function MoreToLove({
+  products,
+  excludeWishlisted = false,
+}: MoreToLoveProps) {
+  /*
+   * Get the current wishlist from Zustand.
+   *
+   * This allows MoreToLove to react immediately
+   * whenever a product is added or removed from
+   * the wishlist.
+   */
+  const wishlistItems = useWishlistStore((state) => state.items);
+
   const [visibleCount, setVisibleCount] = useState(PRODUCTS_PER_LOAD);
 
   const [loading, setLoading] = useState(false);
 
-  const visibleProducts = useMemo(() => {
-    return products.slice(0, visibleCount);
-  }, [products, visibleCount]);
+  /*
+   * Filter products depending on where MoreToLove
+   * is being used.
+   *
+   * Homepage:
+   * excludeWishlisted = false
+   * → show all products
+   *
+   * Wishlist page:
+   * excludeWishlisted = true
+   * → hide products already in wishlist
+   */
+  const filteredProducts = useMemo(() => {
+    if (!excludeWishlisted) {
+      return products;
+    }
 
-  const hasMore = visibleCount < products.length;
+    return products.filter(
+      (product) => !wishlistItems.some((item) => item.productId === product.id),
+    );
+  }, [products, wishlistItems, excludeWishlisted]);
+
+  /*
+   * Apply pagination AFTER filtering.
+   */
+  const visibleProducts = useMemo(() => {
+    return filteredProducts.slice(0, visibleCount);
+  }, [filteredProducts, visibleCount]);
+
+  /*
+   * Determine whether there are more products
+   * available to display.
+   */
+  const hasMore = visibleCount < filteredProducts.length;
 
   function handleLoadMore() {
-    if (loading || !hasMore) return;
+    if (loading || !hasMore) {
+      return;
+    }
 
     setLoading(true);
 
-    // Simulate loading
+    /*
+     * Simulate loading.
+     *
+     * Later, if you implement real pagination
+     * from the database, this can be replaced
+     * with an API request.
+     */
     setTimeout(() => {
       setVisibleCount((current) =>
-        Math.min(current + PRODUCTS_PER_LOAD, products.length),
+        Math.min(current + PRODUCTS_PER_LOAD, filteredProducts.length),
       );
 
       setLoading(false);
     }, LOADING_TIME);
   }
 
-  console.log("TOTAL PRODUCTS:", products.length);
-  console.log("VISIBLE PRODUCTS:", visibleProducts.length);
-  console.log("VISIBLE COUNT:", visibleCount);
-
-  if (products.length === 0) {
+  /*
+   * If there are no products after filtering,
+   * don't render the section.
+   */
+  if (filteredProducts.length === 0) {
     return null;
   }
 
   return (
     <section className="w-full py-8">
       <div className="mx-auto max-w-7xl px-4">
-        {/* Section header */}
+        {/* -------------------------------- */}
+        {/* Section Header */}
+        {/* -------------------------------- */}
+
         <div className="mb-6 flex items-end justify-between gap-4">
           <div>
             <h2 className="text-xl font-bold text-gray-900 sm:text-2xl">
@@ -60,20 +114,26 @@ export default function MoreToLove({ products }: MoreToLoveProps) {
               Discover more products you might like
             </p>
           </div>
-
+          {/* 
           <span className="hidden text-sm text-gray-400 sm:block">
-            {products.length} products
-          </span>
+            {filteredProducts.length} products
+          </span> */}
         </div>
 
-        {/* Product grid */}
+        {/* -------------------------------- */}
+        {/* Product Grid */}
+        {/* -------------------------------- */}
+
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {visibleProducts.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
 
-        {/* Loading animation */}
+        {/* -------------------------------- */}
+        {/* Loading */}
+        {/* -------------------------------- */}
+
         {loading && (
           <div className="mt-8 flex justify-center">
             <div className="flex items-center gap-3 text-sm text-gray-500">
@@ -84,7 +144,10 @@ export default function MoreToLove({ products }: MoreToLoveProps) {
           </div>
         )}
 
-        {/* Load more button */}
+        {/* -------------------------------- */}
+        {/* Load More */}
+        {/* -------------------------------- */}
+
         {!loading && hasMore && (
           <div className="mt-8 flex justify-center">
             <button
@@ -98,8 +161,11 @@ export default function MoreToLove({ products }: MoreToLoveProps) {
           </div>
         )}
 
-        {/* End message */}
-        {!hasMore && products.length > PRODUCTS_PER_LOAD && (
+        {/* -------------------------------- */}
+        {/* End Message */}
+        {/* -------------------------------- */}
+
+        {!hasMore && filteredProducts.length > PRODUCTS_PER_LOAD && (
           <p className="mt-8 text-center text-sm text-gray-400">
             You&apos;ve reached the end of the products.
           </p>
