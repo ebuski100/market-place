@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import WishlistInitializer from "@/components/WishlistInitializer";
-import Footer from "@/components/Footer";
+// import Footer from "@/components/Footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,7 +33,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
 
         <Toaster position="bottom-left" richColors closeButton />
 
-        <Footer />
+        {/* <Footer /> */}
       </body>
     </html>
   );

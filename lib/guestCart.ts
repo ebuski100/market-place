@@ -1,7 +1,8 @@
-import type { Product } from "@/types/product";
+// import type { Product } from "@/types/product";
+import type { CartProduct } from "@/types/product";
 
 export type GuestCartItem = {
-  product: Product;
+  product: CartProduct;
   quantity: number;
 };
 
@@ -29,7 +30,7 @@ export function saveGuestCart(items: GuestCartItem[]) {
   localStorage.setItem(GUEST_CART_KEY, JSON.stringify(items));
 }
 
-export function addToGuestCart(product: Product, quantity = 1) {
+export function addToGuestCart(product: CartProduct, quantity = 1) {
   const items = getGuestCart();
 
   const existingItem = items.find((item) => item.product.id === product.id);

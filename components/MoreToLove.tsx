@@ -114,10 +114,6 @@ export default function MoreToLove({
               Discover more products you might like
             </p>
           </div>
-          {/* 
-          <span className="hidden text-sm text-gray-400 sm:block">
-            {filteredProducts.length} products
-          </span> */}
         </div>
 
         {/* -------------------------------- */}

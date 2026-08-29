@@ -1,50 +1,29 @@
+"use client";
+
 import type { CartItem } from "@/types/cart";
+import QuantitySelector from "@/components/QuantitySelector";
 
 type CartItemControlsProps = {
-  updateQuantity: (itemId: number, newQuantity: number) => void;
-  removeItem: (itemId: number) => void;
-  loadingItem: number | null;
   item: CartItem;
+  loadingItem: number | null;
+  updateQuantity: (itemId: number, newQuantity: number) => void;
 };
 
-const CartItemControls = ({
-  updateQuantity,
-  loadingItem,
-  removeItem,
+export default function CartItemControls({
   item,
-}: CartItemControlsProps) => {
+  loadingItem,
+  updateQuantity,
+}: CartItemControlsProps) {
+  const isLoading = loadingItem === item.id;
+
   return (
-    <div className="flex items-center gap-3 mt-3 ">
-      <button
-        type="button"
-        disabled={loadingItem === item.id || item.quantity <= 1}
-        onClick={() => updateQuantity(item.id, item.quantity - 1)}
-        className="w-8 h-8 border rounded disabled:opacity-40"
-      >
-        -
-      </button>
-
-      <span className="min-w-5 text-center mx-5">{item.quantity}</span>
-
-      <button
-        type="button"
-        disabled={loadingItem === item.id}
-        onClick={() => updateQuantity(item.id, item.quantity + 1)}
-        className="w-8 h-8 border rounded disabled:opacity-40"
-      >
-        +
-      </button>
-
-      <button
-        type="button"
-        disabled={loadingItem === item.id}
-        onClick={() => removeItem(item.id)}
-        className="ml-4 text-red-500"
-      >
-        Remove
-      </button>
+    <div className="mt-3 flex items-center   justify-between w-full max-w-4xl">
+      <QuantitySelector
+        quantity={item.quantity}
+        stock={item.product.stock}
+        disabled={isLoading}
+        onQuantityChange={(newQuantity) => updateQuantity(item.id, newQuantity)}
+      />
     </div>
   );
-};
-
-export default CartItemControls;
+}

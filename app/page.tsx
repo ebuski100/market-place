@@ -7,6 +7,7 @@ import Categories from "@/components/Categories";
 import PromoCarousel from "@/components/PromoCarousel";
 import TodaysDeals from "@/components/TodaysDeals";
 import MoreToLove from "@/components/MoreToLove";
+
 export default async function HomePage() {
   const response = await fetch(
     `${process.env.NEXT_PUBLIC_APP_URL}/api/products`,

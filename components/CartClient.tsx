@@ -15,6 +15,7 @@ import {
 import CartItemControls from "./CartItemControls";
 import AuthPromptModal from "./AuthPromptModal";
 import { useAuth } from "@/hooks/useAuth";
+import QuantitySelector from "./QuantitySelector";
 
 type CartClientProps = {
   initialCart: Cart | null;
@@ -56,10 +57,6 @@ export default function CartClient({
     (sum, item) => sum + item.product.price * item.quantity,
     0,
   );
-
-  // ---------------------------------------
-  // Guest quantity update
-  // ---------------------------------------
 
   function updateGuestQuantity(productId: number, quantity: number) {
     const updatedItems = updateGuestCartQuantity(productId, quantity);
@@ -193,44 +190,28 @@ export default function CartClient({
               </p>
 
               <div className="mt-3 flex items-center gap-3">
-                <button
-                  type="button"
-                  disabled={item.quantity <= 1}
-                  onClick={() =>
-                    updateGuestQuantity(item.product.id, item.quantity - 1)
+                <QuantitySelector
+                  quantity={item.quantity}
+                  stock={item.product.stock}
+                  onQuantityChange={(newQuantity) =>
+                    updateGuestQuantity(item.product.id, newQuantity)
                   }
-                  className="h-8 w-8 rounded border disabled:opacity-40"
-                >
-                  -
-                </button>
-
-                <span className="mx-5 min-w-5 text-center">
-                  {item.quantity}
-                </span>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    updateGuestQuantity(item.product.id, item.quantity + 1)
-                  }
-                  className="h-8 w-8 rounded border"
-                >
-                  +
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => removeGuestItem(item.product.id)}
-                  className="ml-4 text-red-500"
-                >
-                  Remove
-                </button>
+                />
               </div>
             </div>
 
-            <p className="font-semibold">
-              ₦{(item.product.price * item.quantity).toLocaleString()}
-            </p>
+            <div>
+              <p className="font-semibold">
+                ₦{(item.product.price * item.quantity).toLocaleString()}
+              </p>
+              <button
+                type="button"
+                onClick={() => removeGuestItem(item.product.id)}
+                className="ml-4 text-red-500"
+              >
+                Remove
+              </button>
+            </div>
           </div>
         ))}
 
@@ -265,36 +246,52 @@ export default function CartClient({
 
   return (
     <div className="w-full max-w-4xl space-y-6">
-      {items.map((item) => (
-        <div key={item.id} className="flex gap-6 border-b pb-6">
-          <img
-            src={item.product.image}
-            alt={item.product.name}
-            className="h-24 w-24 rounded object-cover"
-          />
-
-          <div className="flex-1">
-            <h2 className="text-lg font-semibold">{item.product.name}</h2>
-
-            <p className="text-gray-500">
-              ₦{item.product.price.toLocaleString()}
-            </p>
-
-            <CartItemControls
-              item={item}
-              loadingItem={loadingItem}
-              updateQuantity={updateQuantity}
-              removeItem={removeItem}
+      {items.map((item) => {
+        const isLoading = loadingItem === item.id;
+        return (
+          <div
+            key={item.id}
+            className="flex gap-2 border border-gray-200 pr-4 py-4 rounded-xl shadow-sm  "
+          >
+            <img
+              src={item.product.image}
+              alt={item.product.name}
+              className="h-24 w-24 rounded object-cover"
             />
+
+            <div className="flex-1 ">
+              <h2 className="text-lg font-semibold">{item.product.name}</h2>
+
+              <p className="text-gray-500">
+                ₦{item.product.price.toLocaleString()}
+              </p>
+
+              <CartItemControls
+                item={item}
+                loadingItem={loadingItem}
+                updateQuantity={updateQuantity}
+              />
+            </div>
+
+            <div className=" flex items-end flex-col  h-full min-h-26 justify-between">
+              <p className="font-semibold">
+                ₦{(item.product.price * item.quantity).toLocaleString()}
+              </p>
+
+              <button
+                type="button"
+                onClick={() => removeItem(item.id)}
+                disabled={isLoading}
+                className="text-sm text-red-500 hover:underline disabled:opacity-50 "
+              >
+                {isLoading ? "Updating..." : "Remove"}
+              </button>
+            </div>
           </div>
+        );
+      })}
 
-          <p className="font-semibold">
-            ₦{(item.product.price * item.quantity).toLocaleString()}
-          </p>
-        </div>
-      ))}
-
-      <div className="flex justify-between text-xl font-bold">
+      <div className="flex justify-between text-xl font-bold px-2">
         <span>Total</span>
 
         <span>₦{cartTotal.toLocaleString()}</span>
