@@ -28,7 +28,8 @@ export default function OAuthSuccessPage() {
       <div className="text-center">
         <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-black" />
 
-        <p className="text-gray-600">Finishing sign in...</p>
+        <p className="text-gray-600">Almost there !!</p>
+        <p className="mt-2 text-sm text-gray-500"> Just a moment... </p>
       </div>
     </main>
   );
