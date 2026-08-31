@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import Footer from "@/components/Footer";
+import GoBack from "@/components/GoBack";
 
 export default async function OrdersPage() {
   const user = await getCurrentUser();
@@ -26,7 +28,10 @@ export default async function OrdersPage() {
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-5xl p-8">
-      <h1 className="mb-8 text-3xl font-bold text-green-700">My Orders</h1>
+      <div className="flex items-center mb-3 gap-2">
+        <GoBack />
+        <h1 className=" text-2xl font-bold text-gray-900">My Orders</h1>
+      </div>
 
       {orders.length === 0 ? (
         <div className="rounded-lg border p-8 text-center">
@@ -101,6 +106,7 @@ export default async function OrdersPage() {
           })}
         </div>
       )}
+      <Footer />
     </main>
   );
 }
