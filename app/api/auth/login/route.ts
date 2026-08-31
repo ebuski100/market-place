@@ -40,6 +40,16 @@ export async function POST(request: Request) {
       );
     }
 
+    if (!user.password) {
+      return Response.json(
+        {
+          error:
+            "This account uses social login. Please continue with Google or GitHub.",
+        },
+        { status: 400 },
+      );
+    }
+
     // 4. Compare submitted password with hashed password
     const passwordMatches = await bcrypt.compare(password, user.password);
 

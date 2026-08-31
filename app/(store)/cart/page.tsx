@@ -55,7 +55,7 @@ export default async function CartPage() {
 
   return (
     <main className="min-h-screen  bg-gray-50 pb-24">
-      <header className=" sticky bg-white top-0 left-0 shadow-sm border-b border-gray-200 z-99 mb-8">
+      <header className=" sticky bg-white top-0 left-0 shadow-sm border-b border-gray-200 z-99 mb-5">
         <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-5 sm:px-6 lg:px-8">
           <Link
             href="/"
@@ -85,7 +85,7 @@ export default async function CartPage() {
       <section className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <CartClient initialCart={cart} isAuthenticated={!!user} />
 
-        <div className="mt-16">
+        <div className="mt-8">
           <MoreToLove products={moreToLoveProducts} excludeWishlisted={false} />
         </div>
       </section>

@@ -59,14 +59,15 @@ model CartItem {
 
 model User {
   id        Int      @id @default(autoincrement())
-  name      String
+  name      String?
   email     String   @unique
-  password  String
+  password  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   role UserRole @default(CUSTOMER)
   isActive  Boolean  @default(true)
   cart     Cart?
+  accounts  Account[]
   sessions Session[]
   orders Order[]
   addresses Address[]
@@ -81,6 +82,22 @@ model Session {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
+}
+
+model Account {
+  id                Int      @id @default(autoincrement())
+
+  userId            Int
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  provider          String
+  providerAccountId String
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([provider, providerAccountId])
   @@index([userId])
 }
 

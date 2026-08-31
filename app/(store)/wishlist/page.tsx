@@ -9,6 +9,7 @@ import type { Product } from "@/types/product";
 import { useStoreCounts } from "@/lib/store/useStoreCounts";
 import MoreToLove from "@/components/MoreToLove";
 import { useWishlistStore } from "@/lib/store/useWishlistStore";
+import GoBack from "@/components/GoBack";
 
 export default function WishlistPage() {
   const { setWishlistCount, incrementCart } = useStoreCounts();
@@ -187,22 +188,23 @@ export default function WishlistPage() {
       <div className="mx-auto max-w-7xl mb-5">
         {/* Header */}
         <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-          <div>
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-50">
-                <Heart size={21} className="fill-green-500 text-green-500" />
+          <div className="flex items-center gap-4">
+            <GoBack />
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
+                  My Wishlist
+                </h1>
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-50">
+                  <Heart size={25} className="fill-red-500 text-red-500" />
+                </div>
               </div>
 
-              <h1 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
-                My Wishlist
-              </h1>
+              <p className="mt-2 text-sm text-gray-500">
+                Products you&apos;ve saved for later.
+              </p>
             </div>
-
-            <p className="mt-2 text-sm text-gray-500">
-              Products you&apos;ve saved for later.
-            </p>
           </div>
-
           <div className="text-sm font-medium text-gray-500">
             {items.length} {items.length === 1 ? "item" : "items"}
           </div>

@@ -1,58 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { ArrowLeft, Heart, Search, ShoppingCart } from "lucide-react";
-import { useCartStore } from "@/lib/store/useCartStore";
+import { Heart, Search, ShoppingCart } from "lucide-react";
+
 import { useStoreCounts } from "@/lib/store/useStoreCounts";
+import GoBack from "./GoBack";
 
 export default function ProductDetailHeader() {
-  const router = useRouter();
-
-  const { wishlistCount } = useStoreCounts();
-
-  const cartItems = useCartStore((state) => state.items);
-
-  const cartQuantity = cartItems.reduce(
-    (total, item) => total + item.quantity,
-    0,
-  );
-
-  function handleBack() {
-    router.back();
-  }
-
-  //   async function handleShare() {
-  //     try {
-  //       if (navigator.share) {
-  //         await navigator.share({
-  //           title: document.title,
-  //           url: window.location.href,
-  //         });
-  //       } else {
-  //         await navigator.clipboard.writeText(window.location.href);
-
-  //         alert("Product link copied!");
-  //       }
-  //     } catch (error) {
-  //       // User cancelled the native share dialog.
-  //       console.log("Share cancelled:", error);
-  //     }
-  //   }
+  const { wishlistCount, cartCount } = useStoreCounts();
 
   return (
     <header className="sticky top-0 z-40 border-b border-gray-100 bg-white/95 backdrop-blur">
       <div className="mx-auto flex h-16 w-full max-w-7xl items-center gap-3 px-4 sm:px-6 lg:px-8">
         {/* Back button */}
-        <button
-          type="button"
-          onClick={handleBack}
-          aria-label="Go back"
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition hover:bg-gray-100 active:scale-95"
-        >
-          <ArrowLeft size={21} />
-        </button>
 
+        <GoBack />
         {/* Search */}
         <div className="relative min-w-0 flex-1">
           <Search
@@ -91,17 +53,17 @@ export default function ProductDetailHeader() {
         >
           <ShoppingCart size={21} />
 
-          {/* {cartCount > 0 && (
+          {cartCount > 0 && (
             <span className="absolute -right-0.5 -top-0.5 flex min-h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
               {cartCount > 99 ? "99+" : cartCount}
             </span>
-          )} */}
+          )}
 
-          {cartQuantity > 0 && (
+          {/* {cartQuantity > 0 && (
             <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-xs font-bold text-white">
               {cartQuantity}
             </span>
-          )}
+          )} */}
         </Link>
 
         {/* Share */}

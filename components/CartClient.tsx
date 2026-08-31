@@ -241,7 +241,12 @@ export default function CartClient({
   }
 
   if (items.length === 0) {
-    return <p className="text-gray-500">Your cart is empty.</p>;
+    return (
+      <div className=" bg-white w-full h-80 flex items-center flex-col justify-center">
+        <img src="/empty-cart.jpg" alt="emptycart" />
+        <p className="text-gray-500">Your cart is empty.</p>
+      </div>
+    );
   }
 
   return (

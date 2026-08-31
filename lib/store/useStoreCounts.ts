@@ -39,6 +39,11 @@ export const useStoreCounts = create<StoreCounts>((set) => ({
       orderCount: count,
     }),
 
+  setWishlistCount: (count) =>
+    set({
+      wishlistCount: count,
+    }),
+
   loadOrderCount: async () => {
     try {
       const response = await fetch("/api/orders", {
@@ -68,11 +73,6 @@ export const useStoreCounts = create<StoreCounts>((set) => ({
       console.error("Failed to load order count:", error);
     }
   },
-
-  setWishlistCount: (count) =>
-    set({
-      wishlistCount: count,
-    }),
 
   setWishlistProductIds: (ids) =>
     set({
