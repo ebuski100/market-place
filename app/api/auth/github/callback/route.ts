@@ -326,9 +326,19 @@ export async function GET(request: Request) {
     // ---------------------------------------
 
     return NextResponse.redirect(`${appUrl}/auth/oauth-success`);
+    // } catch (error) {
+    //   console.error("GitHub OAuth callback error:", error);
+
+    //   return NextResponse.redirect(`${appUrl}/login?error=github`);
+    // }
   } catch (error) {
     console.error("GitHub OAuth callback error:", error);
 
-    return NextResponse.redirect(`${appUrl}/login?error=github`);
+    const message =
+      error instanceof Error ? error.message : "Unknown GitHub OAuth error";
+
+    return NextResponse.redirect(
+      `${appUrl}/login?error=github&reason=${encodeURIComponent(message)}`,
+    );
   }
 }
